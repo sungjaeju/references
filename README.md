@@ -53,3 +53,15 @@ Resolve Issues:
 Address any compilation or runtime issues that arise. This might involve code modifications, adding missing libraries, or configuring the build system correctly.
 Conclusion
 While technically possible, building JAX-RPC for JDK 21 is complex and generally not recommended due to its deprecated status and the availability of better alternatives like JAX-WS. If you are maintaining legacy code, consider migrating to JAX-WS or other modern web service frameworks to ensure better compatibility and support.
+
+manifest {
+		attributes(
+            // 'Class-Path': configurations.compileClasspath.files.collect { "$dependenciesDir/$it.name" }.join(' '),
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Bundle-Name': 'dfronLib',
+            // 'Package': 'com.dfron',
+            // 'Bundle-SymbolicName': 'com.dfron.lib',
+            'Build-Jdk-Spec': "$sourceCompatibility"
+        )
+	}
