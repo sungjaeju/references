@@ -24,19 +24,67 @@ Add the following dependencies to your pom.xml:
     </dependency>
 </dependencies>
 
-**Step 2: Create and Send the SOAP Request
-Here's a complete Java example using Jakarta XML SOAP:
+**Step 2: Create Java POJOs
+Define the Java classes corresponding to the XML structure.
 
-import jakarta.xml.soap.MessageFactory;
-import jakarta.xml.soap.MimeHeaders;
-import jakarta.xml.soap.SOAPBody;
-import jakarta.xml.soap.SOAPConnection;
-import jakarta.xml.soap.SOAPConnectionFactory;
-import jakarta.xml.soap.SOAPElement;
-import jakarta.xml.soap.SOAPEnvelope;
-import jakarta.xml.soap.SOAPException;
-import jakarta.xml.soap.SOAPMessage;
-import jakarta.xml.soap.SOAPPart;
+Employee.java
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.List;
+
+@XmlRootElement(name = "Employee")
+public class Employee {
+    private int employeeId;
+    private String firstName;
+    private String lastName;
+    private List<String> skills;
+
+    @XmlElement(name = "EmployeeId")
+    public int getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    @XmlElement(name = "FirstName")
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    @XmlElement(name = "LastName")
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    @XmlElement(name = "Skills")
+    public List<String> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(List<String> skills) {
+        this.skills = skills;
+    }
+}
+
+
+
+**Step 3: Create and Send the SOAP Request
+Here’s the updated Java example:
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.soap.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -56,6 +104,18 @@ public class SOAPClient {
             // Process the SOAP Response
             System.out.println("Response SOAP Message:");
             soapResponse.writeTo(System.out);
+            System.out.println("\n");
+
+            // Handle the SOAP response and convert to POJOs
+            Employees employees = handleSOAPResponse(soapResponse);
+            if (employees != null) {
+                for (Employee employee : employees.getEmployees()) {
+                    System.out.println("Employee ID: " + employee.getEmployeeId());
+                    System.out.println("First Name: " + employee.getFirstName());
+                    System.out.println("Last Name: " + employee.getLastName());
+                    System.out.println("Skills: " + String.join(", ", employee.getSkills()));
+                }
+            }
 
             soapConnection.close();
         } catch (Exception e) {
@@ -108,14 +168,28 @@ public class SOAPClient {
 
         return soapMessage;
     }
+
+    private static Employees handleSOAPResponse(SOAPMessage soapResponse) throws SOAPException, JAXBException {
+        SOAPBody soapBody = soapResponse.getSOAPBody();
+
+        // Check for any SOAP faults
+        if (soapBody.hasFault()) {
+            SOAPFault fault = soapBody.getFault();
+            System.err.println("SOAP Fault: " + fault.getFaultString());
+            return null;
+        }
+
+        // Unmarshal the SOAP body to Java objects
+        JAXBContext jaxbContext = JAXBContext.newInstance(Employees.class);
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        return (Employees) unmarshaller.unmarshal(soapBody.extractContentAsDocument());
+    }
 }
 
-**Explanation**
-SOAP Connection: Use SOAPConnectionFactory and SOAPConnection to create a connection to the SOAP server.
-SOAP Request: createSOAPRequest() constructs the SOAP request message.
-SOAP Message Creation: The provided SOAP XML is used to create the SOAP message using MessageFactory.
-Send Request: The SOAP request is sent to the server using soapConnection.call(), and the response is received.
-Print Response: The response is printed to the console for inspection.
-Notes
-Replace placeholder values (http://www.example.com/soap-service, http://www.example.com/soap-service-action, http://www.example.com/soap-service-namespace) with actual values based on your SOAP service's WSDL.
-The jakarta.xml.soap package is used to create and handle the SOAP messages, ensuring compatibility with Jakarta EE.
+Explanation
+SOAP Connection: Create a connection to the SOAP server using SOAPConnectionFactory.
+SOAP Request: Create the SOAP request message using MessageFactory and set the SOAP XML content.
+Send Request: Send the SOAP request to the server using soapConnection.call(), and receive the response.
+Print Response: Print the response to the console.
+Handle SOAP Response:
+Check for SOAP faults and handle them appropriately.
