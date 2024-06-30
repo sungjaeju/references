@@ -1,0 +1,21 @@
+ private SOAPMessage xmlToSoapMessage(String xml) throws IOException, SOAPException {
+      MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+      return messageFactory.createMessage(null, new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+    }
+
+  @Override
+  public Object unmarshal(String xml) throws Exception {
+      SOAPMessage soapMessage = xmlToSoapMessage(xml);
+      // soapMessage.writeTo(System.out);
+
+      // Extract the response data from the SOAP message
+      SOAPBody soapBody = soapMessage.getSOAPBody();
+      Node node = soapBody.getElementsByTagName("SAP_MM_SRM_019Response").item(0);
+      
+      JAXBContext jaxbContext = JAXBContext.newInstance(SAP_MM_SRM_019_RESPONSE.class);
+      Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+      Object object = unmarshaller.unmarshal(node, SAP_MM_SRM_019_RESPONSE.class);
+      // Object object = unmarshaller.unmarshal(new StringReader(xml));
+
+      return object;
+  }
