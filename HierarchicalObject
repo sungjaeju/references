@@ -81,3 +81,60 @@ public class HierarchicalObject {
         }
     }
 }
+
+
+//For Javascript
+const createNode = (description, guid, parent) => ({
+    description,
+    guid,
+    parent,
+    children: []
+});
+
+const flatToHierarchy = (nodeList) => {
+    const nodeMap = new Map();
+
+    // Store all nodes in the map
+    nodeList.forEach(node => {
+        nodeMap.set(node.guid, node);
+    });
+
+    // Initialize a list to hold root nodes
+    const roots = [];
+
+    // Build the hierarchical structure
+    nodeList.forEach(node => {
+        if (node.parent === null) {
+            roots.push(node); // It's a root node
+        } else {
+            const parentNode = nodeMap.get(node.parent);
+            if (parentNode) {
+                parentNode.children.push(node);
+            }
+        }
+    });
+
+    return roots;
+};
+
+// Example usage:
+const flatArray = [
+    { Description: "G", guid: "c8e63b35", parent: null },
+    { Description: "Z", guid: "b1113b35", parent: "c8e63b35" },
+    { Description: "F", guid: "d2cc2233", parent: "b1113b35" },
+    { Description: "L", guid: "a24a3b1a", parent: null },
+    { Description: "K", guid: "cd3b11caa", parent: "a24a3b1a" }
+];
+
+const nodeList = flatArray.map(item => createNode(item.Description, item.guid, item.parent));
+
+const roots = flatToHierarchy(nodeList);
+
+// Function to print the hierarchical structure
+const printHierarchy = (node, level = 0) => {
+    console.log(' '.repeat(level * 2) + node.description);
+    node.children.forEach(child => printHierarchy(child, level + 1));
+};
+
+// Print the hierarchical structure
+roots.forEach(root => printHierarchy(root));
