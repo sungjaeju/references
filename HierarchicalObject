@@ -1,0 +1,83 @@
+class Node {
+    String description;
+    String guid;
+    String parent;
+    List<Node> children;
+
+    Node(String description, String guid, String parent) {
+        this.description = description;
+        this.guid = guid;
+        this.parent = parent;
+        this.children = new ArrayList<>();
+    }
+
+    Node(Map<String, String> item) {
+        this.description = item.get("Description");
+        this.guid = item.get("guid");
+        this.parent = item.get("parent");
+        this.children = new ArrayList<>();
+    }
+}
+
+public class HierarchicalObject {
+
+    public static void main(String[] args) {
+        List<Map<String, String>> flatArray = Arrays.asList(
+            Map.of("Description", "G", "guid", "c8e63b35", "parent", null),
+            Map.of("Description", "Z", "guid", "b1113b35", "parent", "c8e63b35"),
+            Map.of("Description", "F", "guid", "d2cc2233", "parent", "b1113b35"),
+            Map.of("Description", "L", "guid", "a24a3b1a", "parent", null),
+            Map.of("Description", "K", "guid", "cd3b11caa", "parent", "a24a3b1a")
+        );
+
+        List<Node> nodeList = new ArrayList<>();
+        for (Map<String, String> item : flatArray) {
+            nodeList.add(new Node(item));
+        }
+
+        List<Node> roots = flatToHierarchy(nodeList);
+
+        // Print the hierarchical structure
+        for (Node root : roots) {
+            printHierarchy(root, 0);
+        }
+    }
+
+    public static List<Node> flatToHierarchy(List<Node> nodeList) {
+        // Create a map to store all nodes by guid
+        Map<String, Node> nodeMap = new HashMap<>();
+
+        // Store all nodes in the map
+        for (Node node : nodeList) {
+            nodeMap.put(node.guid, node);
+        }
+
+        // Initialize a list to hold root nodes
+        List<Node> roots = new ArrayList<>();
+
+        // Build the hierarchical structure
+        for (Node node : nodeMap.values()) {
+            if (node.parent == null) {
+                roots.add(node); // It's a root node
+            } else {
+                // Add this node to its parent's children
+                Node parentNode = nodeMap.get(node.parent);
+                if (parentNode != null) {
+                    parentNode.children.add(node);
+                }
+            }
+        }
+
+        return roots;
+    }
+
+    private static void printHierarchy(Node node, int level) {
+        for (int i = 0; i < level; i++) {
+            System.out.print("  ");
+        }
+        System.out.println(node.description);
+        for (Node child : node.children) {
+            printHierarchy(child, level + 1);
+        }
+    }
+}
